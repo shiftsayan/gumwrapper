@@ -1,4 +1,4 @@
-from one.gum.decorator import argument, command
-from one.gum.wrapper import GumWrapper
+from gumwrapper.decorator import argument, command
+from gumwrapper.wrapper import GumWrapper
 
 __all__ = ["GumWrapper", "argument", "command"]
