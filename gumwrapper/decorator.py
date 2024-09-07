@@ -3,7 +3,7 @@ from typing import Any, Callable
 
 from pydantic import BaseModel
 
-from one.gum.wrapper import GumType, GumWrapper
+from gumwrapper.wrapper import GumType, GumWrapper
 
 # class GumCommand:
 #     def __init__(self, name: str, func: Callable):
