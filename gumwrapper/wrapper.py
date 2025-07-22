@@ -1,5 +1,8 @@
+import os
 import subprocess
-from typing import Literal
+from typing import Literal, Unpack, overload
+
+from gumwrapper.types import ChooseKwargs
 
 
 class GumWrapper:
@@ -44,7 +47,10 @@ class GumWrapper:
         return subprocess.check_output(cmd, universal_newlines=True).strip()
 
     @staticmethod
-    def write(placeholder: str | None = None, width: int | None = None) -> str:
+    def write(
+        placeholder: str | None = None,
+        width: int | None = None,
+    ) -> str:
         cmd = ["gum", "write"]
         if placeholder is not None:
             cmd.extend(["--placeholder", placeholder])
@@ -89,8 +95,8 @@ class GumWrapper:
         return getattr(GumWrapper, method)(*args, **kwargs)
 
     @staticmethod
-    def _call_and_cast(method: str, cast: type, *args, **kwargs):
-        return cast(GumWrapper._call(method, *args, **kwargs))
+    def _call_and_cast(method: str, cls: type, *args, **kwargs):
+        return cls(GumWrapper._call(method, *args, **kwargs))
 
 
 GumType = Literal["choose", "confirm", "input", "write", "filter", "spin"]
