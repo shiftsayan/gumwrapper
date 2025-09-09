@@ -1,17 +1,16 @@
 import subprocess
 from typing import Literal
 
+GumWrapperType = Literal["choose", "confirm", "input", "write", "filter", "file"]
 
-class GumWrapper:
+
+class GumPrompt:
     @staticmethod
     def choose(
         choices: list[str],
-        height: int | None = None,
         limit: int | None = None,
     ) -> str:
         cmd = ["gum", "choose"]
-        if height is not None:
-            cmd.extend(["--height", str(height)])
         if limit is not None:
             cmd.extend(["--limit", str(limit)])
         cmd.extend(choices)
@@ -70,27 +69,36 @@ class GumWrapper:
         return [item.strip() for item in stdout.strip().split("\n")]
 
     @staticmethod
-    def spin(
-        title: str,
-        spinner: str | None = None,
-        show_output: bool = False,
-        command: str = "",
-    ) -> None:
-        cmd = ["gum", "spin", "--title", title]
-        if spinner is not None:
-            cmd.extend(["--spinner", spinner])
-        if show_output:
-            cmd.append("--show-output")
-        cmd.extend(["--", command])
-        subprocess.call(cmd)
+    def file(
+        path: str | None = None,
+        cursor: str | None = None,
+        all_files: bool = False,
+        file_selection: bool = True,
+        directory_selection: bool = False,
+        height: int | None = None,
+        timeout: int | None = None,
+    ) -> str:
+        cmd = ["gum", "file"]
+        if path is not None:
+            cmd.append(path)
+        if cursor is not None:
+            cmd.extend(["--cursor", cursor])
+        if all_files:
+            cmd.append("--all")
+        if file_selection:
+            cmd.append("--file")
+        if directory_selection:
+            cmd.append("--directory")
+        if height is not None:
+            cmd.extend(["--height", str(height)])
+        if timeout is not None:
+            cmd.extend(["--timeout", str(timeout)])
+        return subprocess.check_output(cmd, universal_newlines=True).strip()
 
     @staticmethod
     def _call(method: str, *args, **kwargs):
-        return getattr(GumWrapper, method)(*args, **kwargs)
+        return getattr(GumPrompt, method)(*args, **kwargs)
 
     @staticmethod
     def _call_and_cast(method: str, cast: type, *args, **kwargs):
-        return cast(GumWrapper._call(method, *args, **kwargs))
-
-
-GumType = Literal["choose", "confirm", "input", "write", "filter", "spin"]
+        return cast(GumPrompt._call(method, *args, **kwargs))
