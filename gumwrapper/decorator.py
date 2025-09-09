@@ -97,7 +97,7 @@ def command(
                 if gum_argument.prompt_method is not None:
                     # Use custom prompt_kwargs if provided, otherwise use defaults
                     kwargs = gum_argument.prompt_kwargs or {}
-                    
+
                     if gum_argument.prompt_method == "choose":
                         # For choose, we need a list of choices
                         choices = gum_argument.choices or ["yes", "no"]
@@ -105,7 +105,7 @@ def command(
                             gum_argument.prompt_method,
                             gum_argument.argument_cls,
                             choices,
-                            **kwargs
+                            **kwargs,
                         )
                     elif gum_argument.prompt_method == "filter":
                         # For filter, we need a list of items to filter
@@ -114,11 +114,13 @@ def command(
                             gum_argument.prompt_method,
                             gum_argument.argument_cls,
                             items,
-                            **kwargs
+                            **kwargs,
                         )
                     elif gum_argument.prompt_method == "confirm":
                         # For confirm, we need a message
-                        message = kwargs.get("message", f"Please confirm {gum_argument.argument_name}")
+                        message = kwargs.get(
+                            "message", f"Please confirm {gum_argument.argument_name}"
+                        )
                         result = GumWrapper._call(gum_argument.prompt_method, message)
                         _value = gum_argument.argument_cls(result)
                     elif gum_argument.prompt_method in ["input", "write"]:
@@ -128,21 +130,21 @@ def command(
                         _value = GumWrapper._call_and_cast(
                             gum_argument.prompt_method,
                             gum_argument.argument_cls,
-                            **kwargs
+                            **kwargs,
                         )
                     elif gum_argument.prompt_method == "file":
                         # For file picker, use provided kwargs or defaults
                         _value = GumWrapper._call_and_cast(
                             gum_argument.prompt_method,
                             gum_argument.argument_cls,
-                            **kwargs
+                            **kwargs,
                         )
                     else:
                         # For other methods, use kwargs if provided
                         _value = GumWrapper._call_and_cast(
                             gum_argument.prompt_method,
                             gum_argument.argument_cls,
-                            **kwargs
+                            **kwargs,
                         )
                 else:
                     raise ValueError(f"Argument {_argument} is required")
