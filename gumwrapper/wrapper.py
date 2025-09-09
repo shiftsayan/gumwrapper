@@ -4,7 +4,7 @@ from typing import Literal
 GumWrapperType = Literal["choose", "confirm", "input", "write", "filter", "file"]
 
 
-class GumWrapper:
+class GumPrompt:
     @staticmethod
     def choose(
         choices: list[str],
@@ -97,8 +97,8 @@ class GumWrapper:
 
     @staticmethod
     def _call(method: str, *args, **kwargs):
-        return getattr(GumWrapper, method)(*args, **kwargs)
+        return getattr(GumPrompt, method)(*args, **kwargs)
 
     @staticmethod
     def _call_and_cast(method: str, cast: type, *args, **kwargs):
-        return cast(GumWrapper._call(method, *args, **kwargs))
+        return cast(GumPrompt._call(method, *args, **kwargs))

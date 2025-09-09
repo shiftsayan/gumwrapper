@@ -3,7 +3,7 @@ Utility functions for common formatting and output operations.
 These are direct wrappers around GumWriter methods for convenience.
 """
 
-from gumwrapper.wrapper import GumWrite
+from gumwrapper.writer import GumWriter
 
 
 def format_text(
@@ -24,7 +24,7 @@ def format_text(
     Returns:
         Formatted text string
     """
-    return GumWrite.format(
+    return GumWriter.format(
         template=template, theme=theme, language=language, format_type=format_type
     )
 
@@ -44,7 +44,7 @@ def spin(
         spinner: Spinner style ("dot", "line", "arc", etc.)
         show_output: Whether to show command output
     """
-    GumWrite.spin(
+    GumWriter.spin(
         title=title, command=command, spinner=spinner, show_output=show_output
     )
 
@@ -91,7 +91,7 @@ def style(
     Returns:
         Styled text string
     """
-    return GumWrite.style(
+    return GumWriter.style(
         text=text,
         foreground=foreground,
         background=background,
@@ -126,7 +126,7 @@ def pager(
         soft_wrap: Enable soft wrapping
         timeout: Timeout in seconds
     """
-    GumWrite.pager(
+    GumWriter.pager(
         content=content,
         show_line_numbers=show_line_numbers,
         soft_wrap=soft_wrap,

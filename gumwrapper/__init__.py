@@ -1,4 +1,4 @@
-from gumwrapper.decorator import argument, command
+from gumwrapper.decorator import argument
 from gumwrapper.utilities import (
     box,
     code,
@@ -14,13 +14,13 @@ from gumwrapper.utilities import (
     success,
     warning,
 )
-from gumwrapper.wrapper import GumPrompt, GumWrite
+from gumwrapper.wrapper import GumPrompt
+from gumwrapper.writer import GumWriter
 
 __all__ = [
     "GumPrompt",
-    "GumWrite",
+    "GumWriter",
     "argument",
-    "command",
     # Utility functions
     "format_text",
     "spin",
