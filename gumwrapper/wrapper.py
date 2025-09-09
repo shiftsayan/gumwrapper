@@ -292,4 +292,4 @@ class GumWrapper:
         return cast(GumWrapper._call(method, *args, **kwargs))
 
 
-GumType = Literal["choose", "confirm", "input", "write", "filter", "spin", "file", "format", "join", "pager", "style", "table", "log"]
+GumType = Literal["choose", "confirm", "input", "write", "filter", "file"]

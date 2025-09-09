@@ -5,13 +5,10 @@ from gumwrapper.wrapper import GumType, GumWrapper
 
 
 def test_gum_type():
-    """Test that all GumWrapper methods match the GumType literal."""
-    input_methods = tuple(
-        name
-        for name, _ in inspect.getmembers(GumWrapper, predicate=inspect.isfunction)
-        if not name.startswith("_")
-    )
-    assert sorted(input_methods) == sorted(get_args(GumType))
+    """Test that GumType only contains input methods."""
+    gum_types = get_args(GumType)
+    expected_input_methods = ["choose", "confirm", "input", "write", "filter", "file"]
+    assert sorted(gum_types) == sorted(expected_input_methods)
 
 
 def test_all_methods_exist():
@@ -41,23 +38,15 @@ def test_all_methods_exist():
 
 
 def test_gum_type_completeness():
-    """Test that GumType includes all expected command types."""
+    """Test that GumType only includes input methods, not output methods."""
     gum_types = get_args(GumType)
-    expected_types = [
-        "choose",
-        "confirm",
-        "input",
-        "write",
-        "filter",
-        "spin",
-        "file",
-        "format",
-        "join",
-        "pager",
-        "style",
-        "table",
-        "log",
-    ]
+    input_methods = ["choose", "confirm", "input", "write", "filter", "file"]
+    output_methods = ["spin", "format", "join", "pager", "style", "table", "log"]
 
-    for expected_type in expected_types:
-        assert expected_type in gum_types, f"Type {expected_type} not found in GumType"
+    # All input methods should be in GumType
+    for input_method in input_methods:
+        assert input_method in gum_types, f"Input method {input_method} not found in GumType"
+    
+    # No output methods should be in GumType
+    for output_method in output_methods:
+        assert output_method not in gum_types, f"Output method {output_method} should not be in GumType"

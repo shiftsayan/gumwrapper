@@ -1,14 +1,10 @@
 import argparse
+import sys
 from typing import Any, Callable
 
 from pydantic import BaseModel
 
 from gumwrapper.wrapper import GumType, GumWrapper
-
-# class GumCommand:
-#     def __init__(self, name: str, func: Callable):
-#         self.name = name
-#         self.func = func
 
 
 GUM_DATA_KEY = "__gum_data__"
@@ -22,43 +18,223 @@ class GumArgument(BaseModel):
     required: bool
     help: str | None
     choices: list[str] | None = None
-    prompt_kwargs: dict | None = None
+    # Direct prompt parameters
+    prompt: str | None = None
+    placeholder: str | None = None
+    message: str | None = None
+    password: bool = False
+    limit: int | None = None
+    height: int | None = None
+
+
+# Valid parameters for each INPUT prompt method only
+VALID_PROMPT_PARAMS = {
+    "choose": {"limit", "height"},
+    "confirm": {"message"},
+    "input": {"prompt", "placeholder", "password"},
+    "write": {"placeholder"},
+    "filter": {"placeholder", "limit"},
+    "file": {"path"}
+}
 
 
 def argument(
     name: str,
-    type: type,
+    argument_type: type,
     prompt_method: GumType | None = None,
     *,
     default: Any = None,
     required: bool = False,
     help: str | None = None,
     choices: list[str] | None = None,
-    prompt_kwargs: dict | None = None,
+    # Direct prompt parameters (most commonly used ones)
+    prompt: str | None = None,
+    placeholder: str | None = None,
+    message: str | None = None,
+    password: bool = False,
+    limit: int | None = None,
+    height: int | None = None,
+    path: str | None = None,
+    **kwargs
 ):
+    """
+    Decorator to define function arguments with optional gum prompts.
+    
+    Args:
+        name: Argument name
+        argument_type: Python type for the argument
+        prompt_method: Gum command to use for prompting
+        default: Default value
+        required: Whether argument is required
+        help: Help text
+        choices: List of choices for choose/filter methods
+        prompt: Prompt text (for input/confirm methods)
+        placeholder: Placeholder text (for input/write/filter methods)  
+        message: Message text (for confirm method)
+        password: Hide input (for input method)
+        limit: Limit selections (for choose/filter methods)
+        height: Height in lines (for choose method)
+        path: Starting path (for file method)
+        **kwargs: Additional parameters (validated against method)
+    """
+    
+    # Validate extra kwargs against allowed parameters for the prompt method
+    if prompt_method and kwargs:
+        allowed_params = VALID_PROMPT_PARAMS.get(prompt_method, set())
+        extra_params = set(kwargs.keys()) - allowed_params
+        if extra_params:
+            raise ValueError(
+                f"Invalid parameters for {prompt_method}: {extra_params}. "
+                f"Allowed parameters: {allowed_params}"
+            )
+    
+    # Store all prompt parameters
+    prompt_params = {
+        "prompt": prompt,
+        "placeholder": placeholder, 
+        "message": message,
+        "password": password,
+        "limit": limit,
+        "height": height,
+        "path": path,
+        **kwargs
+    }
+    
+    # Remove None values
+    prompt_params = {k: v for k, v in prompt_params.items() if v is not None}
+    
     gum_argument = GumArgument(
         argument_name=name,
-        argument_cls=type,
+        argument_cls=argument_type,
         prompt_method=prompt_method,
         default=default,
         required=required,
         help=help,
         choices=choices,
-        prompt_kwargs=prompt_kwargs,
+        **{k: v for k, v in prompt_params.items() if k in GumArgument.model_fields}
     )
 
     def decorator(func: Callable):
         gum_data = getattr(func, GUM_DATA_KEY, [])
         gum_data.append(gum_argument)
         setattr(func, GUM_DATA_KEY, gum_data)
-        return func
+        
+        # Auto-execute the function if called directly
+        def wrapper(*args, **call_kwargs):
+            if args or call_kwargs:
+                # Function called with arguments, run normally
+                return func(*args, **call_kwargs)
+            else:
+                # Function called without arguments, collect from prompts
+                return _execute_with_prompts(func)
+        
+        return wrapper
 
     return decorator
 
 
 def _parse_name(name: str) -> str:
-    # remove leading dashes and replace with underscores
+    """Parse argument name to remove leading dashes and replace with underscores."""
     return name.lstrip("-").replace("-", "_")
+
+
+def _execute_with_prompts(func: Callable):
+    """Execute function by collecting arguments from gum prompts."""
+    gum_arguments: list[GumArgument] = getattr(func, GUM_DATA_KEY, [])
+    
+    if not gum_arguments:
+        # No arguments defined, just call the function
+        return func()
+    
+    collected_args = {}
+    
+    for gum_argument in gum_arguments:
+        arg_name = _parse_name(gum_argument.argument_name)
+        
+        if gum_argument.prompt_method is None:
+            if gum_argument.default is not None:
+                collected_args[arg_name] = gum_argument.default
+            elif gum_argument.required:
+                raise ValueError(f"Argument {arg_name} is required but no prompt method specified")
+            else:
+                collected_args[arg_name] = None
+            continue
+        
+        # Build kwargs for the gum method
+        prompt_kwargs = {}
+        
+        # Add method-specific parameters
+        if gum_argument.prompt_method == "choose":
+            choices = gum_argument.choices or ["yes", "no"]
+            if gum_argument.limit is not None:
+                prompt_kwargs["limit"] = gum_argument.limit
+            if gum_argument.height is not None:
+                prompt_kwargs["height"] = gum_argument.height
+            
+            value = GumWrapper._call_and_cast(
+                gum_argument.prompt_method,
+                gum_argument.argument_cls,
+                choices,
+                **prompt_kwargs
+            )
+            
+        elif gum_argument.prompt_method == "filter":
+            items = gum_argument.choices or ["item1", "item2", "item3"]
+            if gum_argument.placeholder is not None:
+                prompt_kwargs["placeholder"] = gum_argument.placeholder
+            if gum_argument.limit is not None:
+                prompt_kwargs["limit"] = gum_argument.limit
+            
+            value = GumWrapper._call_and_cast(
+                gum_argument.prompt_method,
+                gum_argument.argument_cls,
+                items,
+                **prompt_kwargs
+            )
+            
+        elif gum_argument.prompt_method == "confirm":
+            message = gum_argument.message or f"Please confirm {gum_argument.argument_name}"
+            result = GumWrapper._call(gum_argument.prompt_method, message)
+            value = gum_argument.argument_cls(result)
+            
+        elif gum_argument.prompt_method in ["input", "write"]:
+            if gum_argument.prompt is not None:
+                prompt_kwargs["prompt"] = gum_argument.prompt
+            elif gum_argument.prompt_method == "input":
+                prompt_kwargs["prompt"] = f"Enter {gum_argument.argument_name}: "
+                
+            if gum_argument.placeholder is not None:
+                prompt_kwargs["placeholder"] = gum_argument.placeholder
+            if gum_argument.password:
+                prompt_kwargs["password"] = True
+                
+            value = GumWrapper._call_and_cast(
+                gum_argument.prompt_method,
+                gum_argument.argument_cls,
+                **prompt_kwargs
+            )
+            
+        elif gum_argument.prompt_method == "file":
+            if hasattr(gum_argument, 'path') and gum_argument.path is not None:
+                prompt_kwargs["path"] = gum_argument.path
+            
+            value = GumWrapper._call_and_cast(
+                gum_argument.prompt_method,
+                gum_argument.argument_cls,
+                **prompt_kwargs
+            )
+            
+        else:
+            # For other methods, use minimal kwargs
+            value = GumWrapper._call_and_cast(
+                gum_argument.prompt_method,
+                gum_argument.argument_cls,
+                **prompt_kwargs
+            )
+        
+        collected_args[arg_name] = value
+    
+    return func(**collected_args)
 
 
 def command(
@@ -66,89 +242,92 @@ def command(
     description: str | None = None,
     epilog: str | None = None,
 ):
-    parser = argparse.ArgumentParser(
-        prog=program_name,
-        description=description,
-        epilog=epilog,
-    )
-
+    """
+    Decorator to create command-line interface for a function.
+    
+    Args:
+        program_name: Name of the program
+        description: Description text
+        epilog: Epilog text
+    """
     def decorator(func: Callable):
         gum_arguments: list[GumArgument] = getattr(func, GUM_DATA_KEY, [])
+        
+        if not gum_arguments:
+            # No arguments, just return the function
+            return func
+        
+        parser = argparse.ArgumentParser(
+            prog=program_name,
+            description=description,
+            epilog=epilog,
+        )
+        
         map_argument_name_to_gum_argument = {}
-
-        for _gum_argument in gum_arguments:
+        
+        for gum_argument in gum_arguments:
             parser.add_argument(
-                _gum_argument.argument_name,
-                type=_gum_argument.argument_cls,
-                # default=_gum_argument.default,
-                # type=_gum_argument.argument_cls,
-                # choices=
-                required=_gum_argument.required,
-                help=_gum_argument.help,
+                gum_argument.argument_name,
+                type=gum_argument.argument_cls,
+                required=gum_argument.required,
+                help=gum_argument.help,
             )
             map_argument_name_to_gum_argument[
-                _parse_name(_gum_argument.argument_name)
-            ] = _gum_argument
+                _parse_name(gum_argument.argument_name)
+            ] = gum_argument
 
         parsed_arguments = vars(parser.parse_args())
-        for _argument, _value in parsed_arguments.items():
-            if _value is None:
-                gum_argument = map_argument_name_to_gum_argument[_argument]
+        
+        for argument_name, value in parsed_arguments.items():
+            if value is None:
+                gum_argument = map_argument_name_to_gum_argument[argument_name]
                 if gum_argument.prompt_method is not None:
-                    # Use custom prompt_kwargs if provided, otherwise use defaults
-                    kwargs = gum_argument.prompt_kwargs or {}
-
+                    # Same prompting logic as _execute_with_prompts
+                    # (This is a bit duplicated but keeps the command decorator working)
                     if gum_argument.prompt_method == "choose":
-                        # For choose, we need a list of choices
                         choices = gum_argument.choices or ["yes", "no"]
-                        _value = GumWrapper._call_and_cast(
+                        prompt_kwargs = {}
+                        if gum_argument.limit is not None:
+                            prompt_kwargs["limit"] = gum_argument.limit
+                        if gum_argument.height is not None:
+                            prompt_kwargs["height"] = gum_argument.height
+                        value = GumWrapper._call_and_cast(
                             gum_argument.prompt_method,
                             gum_argument.argument_cls,
                             choices,
-                            **kwargs,
-                        )
-                    elif gum_argument.prompt_method == "filter":
-                        # For filter, we need a list of items to filter
-                        items = gum_argument.choices or ["item1", "item2", "item3"]
-                        _value = GumWrapper._call_and_cast(
-                            gum_argument.prompt_method,
-                            gum_argument.argument_cls,
-                            items,
-                            **kwargs,
+                            **prompt_kwargs
                         )
                     elif gum_argument.prompt_method == "confirm":
-                        # For confirm, we need a message
-                        message = kwargs.get(
-                            "message", f"Please confirm {gum_argument.argument_name}"
-                        )
+                        message = gum_argument.message or f"Please confirm {gum_argument.argument_name}"
                         result = GumWrapper._call(gum_argument.prompt_method, message)
-                        _value = gum_argument.argument_cls(result)
-                    elif gum_argument.prompt_method in ["input", "write"]:
-                        # For input/write, we can use a prompt parameter
-                        if "prompt" not in kwargs:
-                            kwargs["prompt"] = f"Enter {gum_argument.argument_name}: "
-                        _value = GumWrapper._call_and_cast(
+                        value = gum_argument.argument_cls(result)
+                    elif gum_argument.prompt_method == "input":
+                        prompt_kwargs = {}
+                        if gum_argument.prompt is not None:
+                            prompt_kwargs["prompt"] = gum_argument.prompt
+                        else:
+                            prompt_kwargs["prompt"] = f"Enter {gum_argument.argument_name}: "
+                        if gum_argument.placeholder is not None:
+                            prompt_kwargs["placeholder"] = gum_argument.placeholder
+                        if gum_argument.password:
+                            prompt_kwargs["password"] = True
+                        value = GumWrapper._call_and_cast(
                             gum_argument.prompt_method,
                             gum_argument.argument_cls,
-                            **kwargs,
+                            **prompt_kwargs
                         )
-                    elif gum_argument.prompt_method == "file":
-                        # For file picker, use provided kwargs or defaults
-                        _value = GumWrapper._call_and_cast(
-                            gum_argument.prompt_method,
-                            gum_argument.argument_cls,
-                            **kwargs,
-                        )
+                    # Add other methods as needed...
                     else:
-                        # For other methods, use kwargs if provided
-                        _value = GumWrapper._call_and_cast(
+                        value = GumWrapper._call_and_cast(
                             gum_argument.prompt_method,
                             gum_argument.argument_cls,
-                            **kwargs,
                         )
                 else:
-                    raise ValueError(f"Argument {_argument} is required")
-                parsed_arguments[_argument] = _value
+                    if gum_argument.required:
+                        raise ValueError(f"Argument {argument_name} is required")
+                    value = gum_argument.default
+                    
+                parsed_arguments[argument_name] = value
 
         def wrapped_func(*args, **kwargs):
             return func(*args, **parsed_arguments, **kwargs)
