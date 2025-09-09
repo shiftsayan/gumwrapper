@@ -4,13 +4,13 @@ Example demonstrating the 'format' command for rendering markdown and code.
 This shows various formatting capabilities for different content types.
 """
 
-from gumwrapper import GumWrapper
+from gumwrapper import GumPrompt
 
 
 def demo_markdown_formatting():
     """Demonstrate markdown formatting with different themes."""
     print("📝 Markdown Formatting Examples:\n")
-    
+
     markdown_content = """# Project Documentation
 
 ## Overview
@@ -39,31 +39,29 @@ def hello_world():
 ---
 
 For more information, visit our [website](https://example.com)."""
-    
+
     # Different themes
     themes = ["dark", "light", "pink", "notty", "auto"]
-    
+
     for theme in themes:
         print(f"Theme: {theme}")
         print("-" * 40)
-        
+
         try:
-            formatted = GumWrapper.format(
-                markdown_content,
-                theme=theme,
-                format_type="markdown"
+            formatted = GumPrompt.format(
+                markdown_content, theme=theme, format_type="markdown"
             )
             print(formatted)
         except Exception as e:
             print(f"Error with theme {theme}: {e}")
-        
-        print("\n" + "="*50 + "\n")
+
+        print("\n" + "=" * 50 + "\n")
 
 
 def demo_code_formatting():
     """Demonstrate code formatting with syntax highlighting."""
     print("💻 Code Formatting Examples:\n")
-    
+
     # Python code example
     python_code = '''def fibonacci(n):
     """Generate Fibonacci sequence up to n terms."""
@@ -84,21 +82,18 @@ def demo_code_formatting():
 if __name__ == "__main__":
     result = fibonacci(10)
     print(f"First 10 Fibonacci numbers: {result}")'''
-    
+
     print("Python Code with syntax highlighting:")
     print("-" * 40)
-    
-    formatted_python = GumWrapper.format(
-        python_code,
-        language="python",
-        theme="dark",
-        format_type="code"
+
+    formatted_python = GumPrompt.format(
+        python_code, language="python", theme="dark", format_type="code"
     )
     print(formatted_python)
     print()
-    
+
     # JavaScript code example
-    js_code = '''function createUser(name, email) {
+    js_code = """function createUser(name, email) {
     return {
         id: Math.random().toString(36).substr(2, 9),
         name: name,
@@ -119,16 +114,13 @@ if __name__ == "__main__":
 
 // Usage
 const user = createUser("John Doe", "john@example.com");
-console.log(user.getInfo());'''
-    
+console.log(user.getInfo());"""
+
     print("JavaScript Code with syntax highlighting:")
     print("-" * 45)
-    
-    formatted_js = GumWrapper.format(
-        js_code,
-        language="javascript",
-        theme="pink",
-        format_type="code"
+
+    formatted_js = GumPrompt.format(
+        js_code, language="javascript", theme="pink", format_type="code"
     )
     print(formatted_js)
     print()
@@ -137,8 +129,8 @@ console.log(user.getInfo());'''
 def demo_json_formatting():
     """Demonstrate JSON formatting."""
     print("📋 JSON Formatting Example:\n")
-    
-    json_content = '''{
+
+    json_content = """{
     "name": "Sample API Response",
     "version": "1.0.0",
     "data": {
@@ -186,13 +178,10 @@ def demo_json_formatting():
         "apiVersion": "v2",
         "responseTime": "45ms"
     }
-}'''
-    
-    formatted_json = GumWrapper.format(
-        json_content,
-        language="json",
-        theme="auto",
-        format_type="code"
+}"""
+
+    formatted_json = GumPrompt.format(
+        json_content, language="json", theme="auto", format_type="code"
     )
     print(formatted_json)
     print()
@@ -201,7 +190,7 @@ def demo_json_formatting():
 def demo_yaml_formatting():
     """Demonstrate YAML formatting."""
     print("⚙️  YAML Configuration Formatting:\n")
-    
+
     yaml_content = '''# Application Configuration
 app:
   name: "My Application"
@@ -252,12 +241,9 @@ external_apis:
     base_url: "https://api.stripe.com"
     api_key: "${STRIPE_API_KEY}"
     webhook_secret: "${STRIPE_WEBHOOK_SECRET}"'''
-    
-    formatted_yaml = GumWrapper.format(
-        yaml_content,
-        language="yaml", 
-        theme="light",
-        format_type="code"
+
+    formatted_yaml = GumPrompt.format(
+        yaml_content, language="yaml", theme="light", format_type="code"
     )
     print(formatted_yaml)
     print()
@@ -266,7 +252,7 @@ external_apis:
 def demo_documentation_formatting():
     """Demonstrate formatting for documentation and help text."""
     print("📚 Documentation Formatting:\n")
-    
+
     help_doc = """# CLI Tool Help Documentation
 
 ## SYNOPSIS
@@ -329,25 +315,21 @@ mytool status --environment production
 
 ---
 *For more detailed information, visit our documentation site.*"""
-    
+
     themes = ["dark", "pink"]
     for theme in themes:
         print(f"Documentation theme: {theme}")
         print("-" * 40)
-        
-        formatted_help = GumWrapper.format(
-            help_doc,
-            theme=theme,
-            format_type="markdown"
-        )
+
+        formatted_help = GumPrompt.format(help_doc, theme=theme, format_type="markdown")
         print(formatted_help)
-        print("\n" + "="*60 + "\n")
+        print("\n" + "=" * 60 + "\n")
 
 
 def demo_mixed_content():
     """Demonstrate formatting mixed content types."""
     print("🔀 Mixed Content Formatting:\n")
-    
+
     # API documentation with code examples
     api_doc = """# User API Documentation
 
@@ -412,18 +394,14 @@ curl -X POST https://api.example.com/api/users \\
 ```
 
 > **Note**: Make sure to use HTTPS in production and implement proper password security."""
-    
-    formatted_api_doc = GumWrapper.format(
-        api_doc,
-        theme="auto",
-        format_type="markdown"
-    )
+
+    formatted_api_doc = GumPrompt.format(api_doc, theme="auto", format_type="markdown")
     print(formatted_api_doc)
 
 
 if __name__ == "__main__":
     import sys
-    
+
     if len(sys.argv) == 1:
         print("Available format examples:")
         print("  python format_example.py markdown")
@@ -433,7 +411,7 @@ if __name__ == "__main__":
         print("  python format_example.py docs")
         print("  python format_example.py mixed")
         print("  python format_example.py all")
-        
+
     elif "markdown" in sys.argv:
         demo_markdown_formatting()
     elif "code" in sys.argv:

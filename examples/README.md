@@ -86,7 +86,7 @@ def my_function(name: str):
 ### Styling Integration
 All examples show integration between input collection and styled output:
 ```python
-result = GumWrapper.style(
+result = GumWriter.style(
     f"Hello {name}!",
     foreground="green",
     border="rounded",

@@ -1,9 +1,9 @@
 """
 Utility functions for common formatting and output operations.
-These are direct wrappers around GumWrapper methods for convenience.
+These are direct wrappers around GumWriter methods for convenience.
 """
 
-from gumwrapper.wrapper import GumWrapper
+from gumwrapper.wrapper import GumWrite
 
 
 def format_text(
@@ -14,21 +14,18 @@ def format_text(
 ) -> str:
     """
     Format text using gum format command.
-    
+
     Args:
         template: Text to format (markdown, code, etc.)
         theme: Color theme to use
         language: Programming language for syntax highlighting
         format_type: Type of formatting ("markdown", "code", etc.)
-    
+
     Returns:
         Formatted text string
     """
-    return GumWrapper.format(
-        template=template,
-        theme=theme, 
-        language=language,
-        format_type=format_type
+    return GumWrite.format(
+        template=template, theme=theme, language=language, format_type=format_type
     )
 
 
@@ -40,18 +37,15 @@ def spin(
 ) -> None:
     """
     Show a spinner while running a command.
-    
+
     Args:
         title: Title to display next to spinner
         command: Shell command to run
         spinner: Spinner style ("dot", "line", "arc", etc.)
         show_output: Whether to show command output
     """
-    GumWrapper.spin(
-        title=title,
-        command=command,
-        spinner=spinner,
-        show_output=show_output
+    GumWrite.spin(
+        title=title, command=command, spinner=spinner, show_output=show_output
     )
 
 
@@ -75,11 +69,11 @@ def style(
 ) -> str:
     """
     Style text with colors, borders, and formatting.
-    
+
     Args:
         text: Text to style
         foreground: Foreground color
-        background: Background color  
+        background: Background color
         border: Border style ("rounded", "thick", "double", "dashed", etc.)
         border_background: Border background color
         border_foreground: Border foreground color
@@ -93,11 +87,11 @@ def style(
         italic: Italic text
         strikethrough: Strikethrough text
         underline: Underlined text
-    
+
     Returns:
         Styled text string
     """
-    return GumWrapper.style(
+    return GumWrite.style(
         text=text,
         foreground=foreground,
         background=background,
@@ -125,18 +119,18 @@ def pager(
 ) -> None:
     """
     Display content in a scrollable pager.
-    
+
     Args:
         content: Content to display
         show_line_numbers: Show line numbers
         soft_wrap: Enable soft wrapping
         timeout: Timeout in seconds
     """
-    GumWrapper.pager(
+    GumWrite.pager(
         content=content,
         show_line_numbers=show_line_numbers,
         soft_wrap=soft_wrap,
-        timeout=timeout
+        timeout=timeout,
     )
 
 
