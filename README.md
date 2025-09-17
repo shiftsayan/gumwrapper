@@ -7,14 +7,16 @@ A Python wrapper for the [gum](https://github.com/charmbracelet/gum) command-lin
 This wrapper provides Python interfaces for all gum commands:
 
 ### Input Commands
-- `choose` - Choose from a list of options  
+
+- `choose` - Choose from a list of options
 - `confirm` - Ask for confirmation
 - `input` - Get text input
 - `write` - Get multi-line text input
 - `filter` - Filter through a list of items
 - `file` - File/directory picker
 
-### Output/Formatting Commands  
+### Output/Formatting Commands
+
 - `style` - Apply colors, borders, and formatting to text
 - `format` - Format text using templates (markdown, code, etc.)
 - `join` - Join text vertically or horizontally
@@ -30,8 +32,8 @@ The wrapper includes a decorator system for creating CLI applications:
 ```python
 from gumwrapper import argument, command, GumWrapper
 
-@argument("name", str, prompt_method="input", prompt_kwargs={"prompt": "Enter name: "})
-@argument("color", str, prompt_method="choose", choices=["red", "green", "blue"])  
+@argument("name", str, prompt_method="input")
+@argument("color", str, prompt_method="choose", choices=["red", "green", "blue"])
 @command("myapp", description="My CLI app")
 def my_app(name: str, color: str):
     styled = GumWrapper.style(f"Hello {name}!", foreground=color, bold=True)
@@ -50,7 +52,3 @@ brew install gum
 # Then install this package
 pip install -e .
 ```
-
-## Usage Examples
-
-See `example_usage.py` for comprehensive examples of all features.

@@ -1,3 +1,18 @@
+import shutil
+
+
+def _check_gum_availability():
+    """Check if gum CLI is available and raise ValueError if not."""
+    if not shutil.which("gum"):
+        raise ValueError(
+            "gum CLI is not installed or not available in PATH. "
+            "Please install gum from https://github.com/charmbracelet/gum"
+        )
+
+
+# Check gum availability on import
+_check_gum_availability()
+
 from gumwrapper.decorator import argument
 from gumwrapper.utilities import (
     box,
