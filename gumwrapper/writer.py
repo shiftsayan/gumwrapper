@@ -17,7 +17,11 @@ class GumWriter:
             cmd.extend(["--spinner", spinner])
         if show_output:
             cmd.append("--show-output")
-        cmd.extend(["--", command])
+        if command.strip():
+            cmd.append("--")
+            cmd.extend(command.split())
+        else:
+            raise ValueError("No command provided")
         subprocess.call(cmd)
 
     @staticmethod
