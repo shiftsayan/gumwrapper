@@ -2,4 +2,5 @@
 - [ ] Create a `click` (eg. `click.argument` and `click.command`) and non-`click` (eg. `gw.choose` and `gw.input`) interface
 - [ ] Make boolean and flag parsing work correctly
 - [ ] Do not clear the screen every time
-- [ ] Make `spin` work correctly
+- [x] Make `spin` work correctly
+- [ ] Better documentation
